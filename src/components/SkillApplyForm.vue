@@ -20,6 +20,8 @@ const { submitting, serverErrors, submit } = useSkillApplication()
 
 const direction = ref<SkillDirection | ''>('')
 const files = ref<File[]>([])
+const uploadError = ref('')
+const uploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 
 const touched = reactive({
   direction: false,
@@ -29,9 +31,10 @@ const touched = reactive({
 const directionError = computed(() =>
   touched.direction && !direction.value ? '请选择合作方向' : '',
 )
-const filesError = computed(() =>
-  touched.files && files.value.length === 0 ? '请至少上传一个个人作品集附件' : '',
-)
+const filesError = computed(() => {
+  if (uploadError.value) return uploadError.value
+  return touched.files && files.value.length === 0 ? '请至少上传一个个人作品集附件' : ''
+})
 
 const canSubmit = computed(
   () => !!direction.value && files.value.length > 0 && !submitting.value,
@@ -66,9 +69,16 @@ async function onSubmit(): Promise<void> {
   if (res) emit('success', res)
 }
 
+function onUploadError(msg: string): void {
+  uploadError.value = msg
+  touched.files = true
+}
+
 function resetAll(): void {
   direction.value = ''
   files.value = []
+  uploadError.value = ''
+  uploaderRef.value?.clearError()
   touched.direction = false
   touched.files = false
   serverErrors.value = []
@@ -160,7 +170,7 @@ function resetAll(): void {
         <span class="text-[11px] text-muted">02</span>
       </div>
       <p class="mb-3 text-[12px] text-muted">上传过往作品案例、项目说明等材料</p>
-      <FileUploader v-model="files" @change="touched.files = true" />
+      <FileUploader ref="uploaderRef" v-model="files" @change="touched.files = true; uploadError = ''" @error="onUploadError" />
       <p
         v-if="filesError || fieldError(serverErrors, 'attachments')"
         class="mt-2 text-[11px] text-danger"

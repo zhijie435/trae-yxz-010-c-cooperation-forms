@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { UploadCloud, FileText, Image as ImageIcon, X } from 'lucide-vue-next'
 import { validateFile, formatSize } from '@/lib/validation'
 
@@ -7,24 +7,33 @@ const props = defineProps<{ modelValue: File[] }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', v: File[]): void
   (e: 'change'): void
+  (e: 'error', message: string): void
 }>()
 
 const dragging = ref(false)
 const error = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
 
+watch(error, (v) => {
+  if (v) emit('error', v)
+})
+
 function addFiles(list: FileList | null): void {
   if (!list) return
   error.value = ''
   const incoming = Array.from(list)
   const accepted: File[] = []
+  const errors: string[] = []
   for (const f of incoming) {
     const err = validateFile(f)
     if (err) {
-      error.value = err
+      errors.push(err)
       continue
     }
     accepted.push(f)
+  }
+  if (errors.length > 0) {
+    error.value = errors.join('；')
   }
   if (!accepted.length) return
   const next = [...props.modelValue, ...accepted]
@@ -58,6 +67,12 @@ function remove(index: number): void {
   )
   emit('change')
 }
+
+function clearError(): void {
+  error.value = ''
+}
+
+defineExpose({ clearError })
 </script>
 
 <template>

@@ -24,6 +24,8 @@ const creditCode = ref('')
 const cities = ref<string[]>([])
 const files = ref<File[]>([])
 const cityOptions = ref<string[]>([])
+const uploadError = ref('')
+const uploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 
 const touched = reactive({
   companyName: false,
@@ -41,9 +43,10 @@ const creditCodeError = computed(() =>
 const citiesError = computed(() =>
   touched.cities && cities.value.length === 0 ? '请至少选择一个覆盖城市' : '',
 )
-const filesError = computed(() =>
-  touched.files && files.value.length === 0 ? '请至少上传一个资质附件' : '',
-)
+const filesError = computed(() => {
+  if (uploadError.value) return uploadError.value
+  return touched.files && files.value.length === 0 ? '请至少上传一个资质附件' : ''
+})
 
 const canSubmit = computed(
   () =>
@@ -63,6 +66,11 @@ onMounted(async () => {
 function onCreditInput(e: Event): void {
   const v = (e.target as HTMLInputElement).value
   creditCode.value = v.toUpperCase().replace(/[^0-9A-Z]/g, '')
+}
+
+function onUploadError(msg: string): void {
+  uploadError.value = msg
+  touched.files = true
 }
 
 async function onSubmit(): Promise<void> {
@@ -86,6 +94,8 @@ function resetAll(): void {
   creditCode.value = ''
   cities.value = []
   files.value = []
+  uploadError.value = ''
+  uploaderRef.value?.clearError()
   touched.companyName = false
   touched.creditCode = false
   touched.cities = false
@@ -208,7 +218,7 @@ function resetAll(): void {
         <span class="text-[11px] text-muted">03</span>
       </div>
       <p class="mb-3 text-[12px] text-muted">上传营业执照、相关资质证书等材料</p>
-      <FileUploader v-model="files" @change="touched.files = true" />
+      <FileUploader ref="uploaderRef" v-model="files" @change="touched.files = true; uploadError = ''" @error="onUploadError" />
       <p
         v-if="filesError || fieldError(serverErrors, 'attachments')"
         class="mt-2 text-[11px] text-danger"

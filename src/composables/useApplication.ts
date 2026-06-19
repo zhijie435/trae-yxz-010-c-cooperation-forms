@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ApplySuccess, FieldError } from '@/lib/types'
-import { validateCreditCode } from '@/lib/validation'
+import { validateCreditCode, validateFile } from '@/lib/validation'
 
 interface ApplyApiPayload {
   success: boolean
@@ -29,8 +29,17 @@ export function useApplication() {
     if (creditCodeErr) clientErrors.push({ field: 'creditCode', message: creditCodeErr })
     if (!Array.isArray(payload.cities) || payload.cities.length === 0)
       clientErrors.push({ field: 'cities', message: '请至少选择一个覆盖城市' })
-    if (!Array.isArray(payload.files) || payload.files.length === 0)
+    if (!Array.isArray(payload.files) || payload.files.length === 0) {
       clientErrors.push({ field: 'attachments', message: '请至少上传一个资质附件' })
+    } else {
+      for (const f of payload.files) {
+        const fileErr = validateFile(f)
+        if (fileErr) {
+          clientErrors.push({ field: 'attachments', message: fileErr })
+          break
+        }
+      }
+    }
 
     if (clientErrors.length > 0) {
       serverErrors.value = clientErrors

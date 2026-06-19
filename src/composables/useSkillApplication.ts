@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import type { ApplySuccess, FieldError } from '@/lib/types'
+import { validateFile } from '@/lib/validation'
 
 interface ApplyApiPayload {
   success: boolean
@@ -28,8 +29,17 @@ export function useSkillApplication() {
     } else if (direction !== 'hardware' && direction !== 'software') {
       clientErrors.push({ field: 'direction', message: '技能方向无效' })
     }
-    if (!Array.isArray(payload.files) || payload.files.length === 0)
+    if (!Array.isArray(payload.files) || payload.files.length === 0) {
       clientErrors.push({ field: 'attachments', message: '请至少上传一个资质附件' })
+    } else {
+      for (const f of payload.files) {
+        const fileErr = validateFile(f)
+        if (fileErr) {
+          clientErrors.push({ field: 'attachments', message: fileErr })
+          break
+        }
+      }
+    }
 
     if (clientErrors.length > 0) {
       serverErrors.value = clientErrors
