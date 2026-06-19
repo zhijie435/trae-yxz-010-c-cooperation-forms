@@ -3,6 +3,7 @@ import HomePage from '@/pages/HomePage.vue'
 import SkillApplyPage from '@/pages/SkillApplyPage.vue'
 import MarketApplyPage from '@/pages/MarketApplyPage.vue'
 import IncubationApplyPage from '@/pages/IncubationApplyPage.vue'
+import JobApplyPage from '@/pages/JobApplyPage.vue'
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/incubation',
     name: 'incubation',
     component: IncubationApplyPage,
+  },
+  {
+    path: '/job',
+    name: 'job',
+    component: JobApplyPage,
   },
 ]
 

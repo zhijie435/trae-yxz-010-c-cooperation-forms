@@ -4,7 +4,7 @@ import ApplyForm from '@/components/ApplyForm.vue'
 import SuccessResult from '@/components/SuccessResult.vue'
 import type { ApplySuccess } from '@/lib/types'
 import { useRouter } from 'vue-router'
-import { Sparkles, Handshake, Sprout } from 'lucide-vue-next'
+import { Sparkles, Handshake, Sprout, Briefcase } from 'lucide-vue-next'
 
 const router = useRouter()
 const result = ref<ApplySuccess | null>(null)
@@ -62,6 +62,14 @@ function onReset(): void {
           >
             <Sprout class="h-3.5 w-3.5 text-gold" />
             产业孵化 →
+          </button>
+          <button
+            type="button"
+            class="group inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-2/50 px-3 py-1 text-[11px] tracking-wide text-ink-soft transition-all hover:border-gold/50 hover:bg-gold/10 hover:text-ink"
+            @click="router.push('/job')"
+          >
+            <Briefcase class="h-3.5 w-3.5 text-gold" />
+            我要应聘 →
           </button>
           <button
             type="button"

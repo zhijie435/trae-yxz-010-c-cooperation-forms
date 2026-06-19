@@ -10,6 +10,7 @@ const CAP_DATA_FILE = path.join(DATA_DIR, 'applications.json')
 const SKILL_DATA_FILE = path.join(DATA_DIR, 'skill-applications.json')
 const MARKET_DATA_FILE = path.join(DATA_DIR, 'market-applications.json')
 const INCUBATION_DATA_FILE = path.join(DATA_DIR, 'incubation-applications.json')
+const JOB_DATA_FILE = path.join(DATA_DIR, 'job-applications.json')
 
 export interface AttachmentRecord {
   filename: string
@@ -50,6 +51,16 @@ export interface IncubationApplicationRecord {
   applicationNo: string
   projectIntro: string
   incubationNeeds: string
+  receivedAt: string
+}
+
+export interface JobApplicationRecord {
+  applicationNo: string
+  name: string
+  phone: string
+  email: string
+  city: string
+  expectedSalary: string
   receivedAt: string
 }
 
@@ -126,7 +137,24 @@ export function appendIncubationApplication(record: IncubationApplicationRecord)
   fs.writeFileSync(INCUBATION_DATA_FILE, JSON.stringify(all, null, 2), 'utf-8')
 }
 
-export function generateApplicationNo(prefix: 'CAP' | 'SA' | 'MAP' | 'INC' = 'CAP'): string {
+export function readJobApplications(): JobApplicationRecord[] {
+  ensureDataFile(JOB_DATA_FILE)
+  try {
+    const raw = fs.readFileSync(JOB_DATA_FILE, 'utf-8')
+    const data = JSON.parse(raw)
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+export function appendJobApplication(record: JobApplicationRecord): void {
+  const all = readJobApplications()
+  all.push(record)
+  fs.writeFileSync(JOB_DATA_FILE, JSON.stringify(all, null, 2), 'utf-8')
+}
+
+export function generateApplicationNo(prefix: 'CAP' | 'SA' | 'MAP' | 'INC' | 'JOB' = 'CAP'): string {
   const d = new Date()
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
   const rand = Math.random().toString(16).slice(2, 6).toUpperCase()

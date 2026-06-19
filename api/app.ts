@@ -15,6 +15,7 @@ import applyRoutes from './routes/apply.js'
 import skillApplyRoutes from './routes/skill-apply.js'
 import marketApplyRoutes from './routes/market-apply.js'
 import incubationApplyRoutes from './routes/incubation-apply.js'
+import jobApplyRoutes from './routes/job-apply.js'
 import citiesRoutes from './routes/cities.js'
 
 // for esm mode
@@ -37,6 +38,7 @@ app.use('/api/apply', applyRoutes)
 app.use('/api/skill-apply', skillApplyRoutes)
 app.use('/api/market-apply', marketApplyRoutes)
 app.use('/api/incubation-apply', incubationApplyRoutes)
+app.use('/api/job-apply', jobApplyRoutes)
 app.use('/api/cities', citiesRoutes)
 
 /**
