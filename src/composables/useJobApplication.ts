@@ -1,6 +1,9 @@
 import { ref } from 'vue'
 import type { ApplySuccess, FieldError } from '@/lib/types'
 
+const PHONE_RE = /^1[3-9]\d{9}$/
+const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.-]+$/
+
 interface ApplyApiPayload {
   success: boolean
   applicationNo?: string
@@ -21,11 +24,38 @@ export function useJobApplication() {
   }): Promise<ApplySuccess | null> {
     submitting.value = true
     serverErrors.value = []
+
+    const clientErrors: FieldError[] = []
+    const name = payload.name.trim()
+    if (!name) clientErrors.push({ field: 'name', message: '请填写姓名' })
+    const phone = payload.phone.trim()
+    if (!phone) {
+      clientErrors.push({ field: 'phone', message: '请填写手机号' })
+    } else if (!PHONE_RE.test(phone)) {
+      clientErrors.push({ field: 'phone', message: '手机号格式不正确' })
+    }
+    const email = payload.email.trim()
+    if (!email) {
+      clientErrors.push({ field: 'email', message: '请填写邮箱' })
+    } else if (!EMAIL_RE.test(email)) {
+      clientErrors.push({ field: 'email', message: '邮箱格式不正确' })
+    }
+    const city = payload.city.trim()
+    if (!city) clientErrors.push({ field: 'city', message: '请填写意向城市' })
+    const expectedSalary = payload.expectedSalary.trim()
+    if (!expectedSalary) clientErrors.push({ field: 'expectedSalary', message: '请填写期望薪资' })
+
+    if (clientErrors.length > 0) {
+      serverErrors.value = clientErrors
+      submitting.value = false
+      return null
+    }
+
     try {
       const res = await fetch('/api/job-apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ name, phone, email, city, expectedSalary }),
       })
       const data = (await res.json()) as ApplyApiPayload
       if (data.success && data.applicationNo && data.receivedAt) {

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import type { ApplySuccess, FieldError } from '@/lib/types'
+import { validateCreditCode } from '@/lib/validation'
 
 interface ApplyApiPayload {
   success: boolean
@@ -20,9 +21,26 @@ export function useApplication() {
   }): Promise<ApplySuccess | null> {
     submitting.value = true
     serverErrors.value = []
+
+    const clientErrors: FieldError[] = []
+    const companyName = payload.companyName.trim()
+    if (!companyName) clientErrors.push({ field: 'companyName', message: '请填写企业全称' })
+    const creditCodeErr = validateCreditCode(payload.creditCode)
+    if (creditCodeErr) clientErrors.push({ field: 'creditCode', message: creditCodeErr })
+    if (!Array.isArray(payload.cities) || payload.cities.length === 0)
+      clientErrors.push({ field: 'cities', message: '请至少选择一个覆盖城市' })
+    if (!Array.isArray(payload.files) || payload.files.length === 0)
+      clientErrors.push({ field: 'attachments', message: '请至少上传一个资质附件' })
+
+    if (clientErrors.length > 0) {
+      serverErrors.value = clientErrors
+      submitting.value = false
+      return null
+    }
+
     const fd = new FormData()
-    fd.append('companyName', payload.companyName)
-    fd.append('creditCode', payload.creditCode)
+    fd.append('companyName', companyName)
+    fd.append('creditCode', payload.creditCode.trim())
     fd.append('cities', JSON.stringify(payload.cities))
     for (const f of payload.files) fd.append('attachments', f, f.name)
     try {

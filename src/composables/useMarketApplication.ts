@@ -21,11 +21,30 @@ export function useMarketApplication() {
   }): Promise<ApplySuccess | null> {
     submitting.value = true
     serverErrors.value = []
+
+    const clientErrors: FieldError[] = []
+    const name = payload.name.trim()
+    if (!name) clientErrors.push({ field: 'name', message: '请填写企业/个人名称' })
+    const contact = payload.contact.trim()
+    if (!contact) clientErrors.push({ field: 'contact', message: '请填写联系人信息' })
+    const address = payload.address.trim()
+    if (!address) clientErrors.push({ field: 'address', message: '请填写地址' })
+    const businessIntro = payload.businessIntro.trim()
+    if (!businessIntro) clientErrors.push({ field: 'businessIntro', message: '请填写业务介绍' })
+    const advantages = payload.advantages.trim()
+    if (!advantages) clientErrors.push({ field: 'advantages', message: '请填写合作优势' })
+
+    if (clientErrors.length > 0) {
+      serverErrors.value = clientErrors
+      submitting.value = false
+      return null
+    }
+
     try {
       const res = await fetch('/api/market-apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ name, contact, address, businessIntro, advantages }),
       })
       const data = (await res.json()) as ApplyApiPayload
       if (data.success && data.applicationNo && data.receivedAt) {
