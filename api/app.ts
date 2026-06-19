@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import applyRoutes from './routes/apply.js'
 import skillApplyRoutes from './routes/skill-apply.js'
 import marketApplyRoutes from './routes/market-apply.js'
+import incubationApplyRoutes from './routes/incubation-apply.js'
 import citiesRoutes from './routes/cities.js'
 
 // for esm mode
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use('/api/apply', applyRoutes)
 app.use('/api/skill-apply', skillApplyRoutes)
 app.use('/api/market-apply', marketApplyRoutes)
+app.use('/api/incubation-apply', incubationApplyRoutes)
 app.use('/api/cities', citiesRoutes)
 
 /**
