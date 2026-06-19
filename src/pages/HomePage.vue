@@ -3,7 +3,10 @@ import { ref } from 'vue'
 import ApplyForm from '@/components/ApplyForm.vue'
 import SuccessResult from '@/components/SuccessResult.vue'
 import type { ApplySuccess } from '@/lib/types'
+import { useRouter } from 'vue-router'
+import { Sparkles, Handshake } from 'lucide-vue-next'
 
+const router = useRouter()
 const result = ref<ApplySuccess | null>(null)
 
 function onSuccess(payload: ApplySuccess): void {
@@ -43,11 +46,24 @@ function onReset(): void {
             <p class="text-[10px] uppercase tracking-[0.22em] text-muted">City Partner Program</p>
           </div>
         </div>
-        <span
-          class="hidden rounded-full border border-line bg-paper-2/50 px-3 py-1 text-[11px] tracking-wide text-ink-soft sm:inline"
-        >
-          提交后生成专属回执编号
-        </span>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="group inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-2/50 px-3 py-1 text-[11px] tracking-wide text-ink-soft transition-all hover:border-gold/50 hover:bg-gold/10 hover:text-ink"
+            @click="router.push('/market')"
+          >
+            <Handshake class="h-3.5 w-3.5 text-gold" />
+            市场合作 →
+          </button>
+          <button
+            type="button"
+            class="group inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-2/50 px-3 py-1 text-[11px] tracking-wide text-ink-soft transition-all hover:border-gold/50 hover:bg-gold/10 hover:text-ink"
+            @click="router.push('/skill')"
+          >
+            <Sparkles class="h-3.5 w-3.5 text-gold" />
+            技能作者合作 →
+          </button>
+        </div>
       </header>
 
       <section class="mt-12 animate-rise" style="animation-delay: 80ms">

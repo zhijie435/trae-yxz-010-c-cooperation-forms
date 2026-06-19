@@ -46,3 +46,4 @@ YXZ-CN-*-任务跟踪表*.xlsx
 *.sqlite3
 .env
 .env.*
+node_modules/

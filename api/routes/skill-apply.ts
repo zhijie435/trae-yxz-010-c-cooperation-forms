@@ -3,7 +3,11 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { appendApplication, generateApplicationNo } from '../lib/storage.js'
+import {
+  appendSkillApplication,
+  generateApplicationNo,
+  type SkillDirection,
+} from '../lib/storage.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -20,7 +24,7 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname) || ''
     const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-    cb(null, `u-${unique}${ext}`)
+    cb(null, `s-${unique}${ext}`)
   },
 })
 
@@ -37,6 +41,8 @@ interface FieldError {
   field: string
   message: string
 }
+
+const VALID_DIRECTIONS: SkillDirection[] = ['hardware', 'software']
 
 function cleanupFiles(files: { path?: string }[]): void {
   for (const f of files) {
@@ -76,38 +82,18 @@ function uploadAttachments(req: Request, res: Response, next: NextFunction): voi
 
 router.post('/', uploadAttachments, (req: Request, res: Response): void => {
   const errors: FieldError[] = []
-  const body = req.body as { companyName?: string; creditCode?: string; cities?: string }
+  const body = req.body as { direction?: string }
 
-  const companyName = (body.companyName ?? '').trim()
-  if (!companyName) {
-    errors.push({ field: 'companyName', message: '请填写企业全称' })
-  } else if (companyName.length > 100) {
-    errors.push({ field: 'companyName', message: '企业全称过长（不超过 100 字）' })
-  }
-
-  const creditCode = (body.creditCode ?? '').trim()
-  if (!creditCode) {
-    errors.push({ field: 'creditCode', message: '请填写统一社会信用代码' })
-  } else if (!/^[0-9A-Z]{18}$/.test(creditCode)) {
-    errors.push({ field: 'creditCode', message: '统一社会信用代码应为 18 位大写字母与数字' })
-  }
-
-  let cities: string[] = []
-  try {
-    const parsed = body.cities ? JSON.parse(body.cities) : []
-    if (Array.isArray(parsed)) {
-      cities = parsed.filter((c): c is string => typeof c === 'string')
-    }
-  } catch {
-    cities = []
-  }
-  if (cities.length === 0) {
-    errors.push({ field: 'cities', message: '请至少选择一个覆盖城市' })
+  const direction = (body.direction ?? '').trim() as SkillDirection
+  if (!direction) {
+    errors.push({ field: 'direction', message: '请选择合作方向' })
+  } else if (!VALID_DIRECTIONS.includes(direction)) {
+    errors.push({ field: 'direction', message: '合作方向无效，请选择硬件或软件' })
   }
 
   const files = (req.files as Express.Multer.File[] | undefined) ?? []
   if (files.length === 0) {
-    errors.push({ field: 'attachments', message: '请至少上传一个资质附件' })
+    errors.push({ field: 'attachments', message: '请至少上传一个个人作品集附件' })
   }
 
   if (errors.length > 0) {
@@ -117,10 +103,8 @@ router.post('/', uploadAttachments, (req: Request, res: Response): void => {
   }
 
   const record = {
-    applicationNo: generateApplicationNo('CAP'),
-    companyName,
-    creditCode,
-    cities,
+    applicationNo: generateApplicationNo('SA'),
+    direction,
     receivedAt: new Date().toISOString(),
     attachments: files.map((f) => ({
       filename: f.filename,
@@ -130,7 +114,7 @@ router.post('/', uploadAttachments, (req: Request, res: Response): void => {
     })),
   }
 
-  appendApplication(record)
+  appendSkillApplication(record)
   res.status(200).json({
     success: true,
     applicationNo: record.applicationNo,
