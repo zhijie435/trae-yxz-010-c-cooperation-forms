@@ -54,7 +54,7 @@ describe('JobApplyForm', () => {
     const wrapper = mount(JobApplyForm, { global: globalConfig })
     expect(wrapper.text()).toContain('基本信息')
     expect(wrapper.text()).toContain('姓名')
-    expect(wrapper.text()).toContain('联系电话')
+    expect(wrapper.text()).toContain('联系方式')
     expect(wrapper.text()).toContain('邮箱')
     expect(wrapper.text()).toContain('现居城市')
     expect(wrapper.text()).toContain('期望薪资')
@@ -166,7 +166,7 @@ describe('JobApplyForm', () => {
   it('手机号失焦应显示验证错误', async () => {
     const wrapper = mount(JobApplyForm, { global: globalConfig })
     await wrapper.find('#phone').trigger('blur')
-    expect(wrapper.text()).toContain('请填写联系电话')
+    expect(wrapper.text()).toContain('请填写联系方式')
   })
 
   it('邮箱失焦应显示验证错误', async () => {
@@ -187,18 +187,21 @@ describe('JobApplyForm', () => {
     expect(wrapper.text()).toContain('请填写期望薪资')
   })
 
-  it('手机号输入应只保留数字', async () => {
+  it('微信号应完整保留不被过滤', async () => {
     const wrapper = mount(JobApplyForm, { global: globalConfig })
     const input = wrapper.find('#phone')
-    await input.setValue('138abc00138000')
-    expect((input.element as HTMLInputElement).value).toBe('13800138000')
+    await input.setValue('wxid_zhangsan123')
+    expect((input.element as HTMLInputElement).value).toBe('wxid_zhangsan123')
   })
 
-  it('手机号超过 11 位应被截断', async () => {
+  it('微信号可以提交', async () => {
     const wrapper = mount(JobApplyForm, { global: globalConfig })
-    const input = wrapper.find('#phone')
-    await input.setValue('1380013800012345')
-    expect((input.element as HTMLInputElement).value).toHaveLength(11)
+    await wrapper.find('#name').setValue('张三')
+    await wrapper.find('#phone').setValue('wxid_zhangsan123')
+    await wrapper.find('#email').setValue('test@example.com')
+    await wrapper.find('#city').setValue('北京')
+    await wrapper.find('#expectedSalary').setValue('15K-20K')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
   })
 
   it('提交按钮文字应为"投递简历"', () => {

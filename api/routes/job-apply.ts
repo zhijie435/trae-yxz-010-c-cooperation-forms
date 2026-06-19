@@ -14,6 +14,17 @@ interface FieldError {
 const PHONE_RE = /^1[3-9]\d{9}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function validateContact(value: string): string | null {
+  const v = value.trim()
+  if (!v) return '请填写联系方式'
+  if (/^\d+$/.test(v)) {
+    if (!PHONE_RE.test(v)) return '请输入有效的 11 位手机号码'
+  } else {
+    if (v.length < 6 || v.length > 50) return '微信号/联系方式长度应为 6-50 位'
+  }
+  return null
+}
+
 const router = Router()
 
 router.post('/', (req: Request, res: Response): void => {
@@ -34,10 +45,9 @@ router.post('/', (req: Request, res: Response): void => {
   }
 
   const phone = (body.phone ?? '').trim()
-  if (!phone) {
-    errors.push({ field: 'phone', message: '请填写联系电话' })
-  } else if (!PHONE_RE.test(phone)) {
-    errors.push({ field: 'phone', message: '请输入有效的 11 位手机号码' })
+  const phoneErr = validateContact(phone)
+  if (phoneErr) {
+    errors.push({ field: 'phone', message: phoneErr })
   }
 
   const email = (body.email ?? '').trim()

@@ -4,6 +4,17 @@ import type { ApplySuccess, FieldError } from '@/lib/types'
 const PHONE_RE = /^1[3-9]\d{9}$/
 const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.-]+$/
 
+function validateContact(value: string): string | null {
+  const v = value.trim()
+  if (!v) return '请填写联系方式'
+  if (/^\d+$/.test(v)) {
+    if (!PHONE_RE.test(v)) return '请输入有效的 11 位手机号码'
+  } else {
+    if (v.length < 6 || v.length > 50) return '微信号/联系方式长度应为 6-50 位'
+  }
+  return null
+}
+
 interface ApplyApiPayload {
   success: boolean
   applicationNo?: string
@@ -29,11 +40,8 @@ export function useJobApplication() {
     const name = payload.name.trim()
     if (!name) clientErrors.push({ field: 'name', message: '请填写姓名' })
     const phone = payload.phone.trim()
-    if (!phone) {
-      clientErrors.push({ field: 'phone', message: '请填写手机号' })
-    } else if (!PHONE_RE.test(phone)) {
-      clientErrors.push({ field: 'phone', message: '手机号格式不正确' })
-    }
+    const phoneErr = validateContact(phone)
+    if (phoneErr) clientErrors.push({ field: 'phone', message: phoneErr })
     const email = payload.email.trim()
     if (!email) {
       clientErrors.push({ field: 'email', message: '请填写邮箱' })

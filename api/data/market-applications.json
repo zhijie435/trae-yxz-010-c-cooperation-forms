@@ -1,1 +1,68 @@
-[]
+[
+  {
+    "applicationNo": "MAP-20260620-A3E0",
+    "name": "测试公司",
+    "contact": "zhangsan_wx",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.451Z",
+    "status": "pending",
+    "reviewedAt": null
+  },
+  {
+    "applicationNo": "MAP-20260620-EC52",
+    "name": "测试公司",
+    "contact": "wxid_abc123",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.456Z",
+    "status": "pending",
+    "reviewedAt": null
+  },
+  {
+    "applicationNo": "MAP-20260620-2377",
+    "name": "测试公司",
+    "contact": "张三 13800138000",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.459Z",
+    "status": "pending",
+    "reviewedAt": null
+  },
+  {
+    "applicationNo": "MAP-20260620-80F7",
+    "name": "测试公司",
+    "contact": "a_b_c_d_e_f_g_h_i_j",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.462Z",
+    "status": "pending",
+    "reviewedAt": null
+  },
+  {
+    "applicationNo": "MAP-20260620-935B",
+    "name": "测试公司",
+    "contact": "xiaoming_123456",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.465Z",
+    "status": "pending",
+    "reviewedAt": null
+  },
+  {
+    "applicationNo": "MAP-20260620-4F52",
+    "name": "测试公司",
+    "contact": "微信：xiaoming",
+    "address": "测试地址",
+    "businessIntro": "业务介绍",
+    "advantages": "合作优势",
+    "receivedAt": "2026-06-19T18:05:27.468Z",
+    "status": "pending",
+    "reviewedAt": null
+  }
+]

@@ -28,6 +28,17 @@ const expectedSalary = ref('')
 const PHONE_RE = /^1[3-9]\d{9}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function validateContact(value: string): string | null {
+  const v = value.trim()
+  if (!v) return '请填写联系方式'
+  if (/^\d+$/.test(v)) {
+    if (!PHONE_RE.test(v)) return '请输入有效的 11 位手机号码'
+  } else {
+    if (v.length < 6 || v.length > 50) return '微信号/联系方式长度应为 6-50 位'
+  }
+  return null
+}
+
 const touched = reactive({
   name: false,
   phone: false,
@@ -41,9 +52,7 @@ const nameError = computed(() =>
 )
 const phoneError = computed(() => {
   if (!touched.phone) return ''
-  if (!phone.value.trim()) return '请填写联系电话'
-  if (!PHONE_RE.test(phone.value.trim())) return '请输入有效的 11 位手机号码'
-  return ''
+  return validateContact(phone.value) ?? ''
 })
 const emailError = computed(() => {
   if (!touched.email) return ''
@@ -61,7 +70,7 @@ const expectedSalaryError = computed(() =>
 const canSubmit = computed(
   () =>
     !!name.value.trim() &&
-    PHONE_RE.test(phone.value.trim()) &&
+    validateContact(phone.value) === null &&
     EMAIL_RE.test(email.value.trim()) &&
     !!city.value.trim() &&
     !!expectedSalary.value.trim() &&
@@ -72,7 +81,7 @@ const hasServerError = computed(() => serverErrors.value.length > 0)
 
 function onPhoneInput(e: Event): void {
   const v = (e.target as HTMLInputElement).value
-  phone.value = v.replace(/[^0-9]/g, '').slice(0, 11)
+  phone.value = v.trim().slice(0, 50)
 }
 
 async function onSubmit(): Promise<void> {
@@ -167,16 +176,14 @@ function resetAll(): void {
         <div>
           <label class="field-label" for="phone">
             <Phone class="h-3.5 w-3.5" />
-            联系电话
+            联系方式
           </label>
           <input
             id="phone"
             :value="phone"
-            type="tel"
-            inputmode="numeric"
-            maxlength="11"
-            placeholder="请输入 11 位手机号码"
-            class="field-input tracking-[0.08em]"
+            type="text"
+            placeholder="请输入手机号或微信号"
+            class="field-input"
             :class="
               phoneError || fieldError(serverErrors, 'phone')
                 ? 'border-danger focus:border-danger'
@@ -193,7 +200,7 @@ function resetAll(): void {
                 : 'text-muted'
             "
           >
-            {{ phoneError || fieldError(serverErrors, 'phone') || '便于我们与您联系' }}
+            {{ phoneError || fieldError(serverErrors, 'phone') || '手机号或微信号，便于我们与您联系' }}
           </p>
         </div>
 

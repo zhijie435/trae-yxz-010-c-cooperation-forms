@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "applicationNo": "JOB-20260620-E833",
+    "name": "张三",
+    "phone": "wxid_zhangsan123",
+    "email": "zhangsan@test.com",
+    "city": "北京",
+    "expectedSalary": "15K-20K",
+    "receivedAt": "2026-06-19T18:12:15.584Z",
+    "status": "pending",
+    "reviewedAt": null
+  }
+]
