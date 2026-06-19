@@ -12,6 +12,8 @@ const MARKET_DATA_FILE = path.join(DATA_DIR, 'market-applications.json')
 const INCUBATION_DATA_FILE = path.join(DATA_DIR, 'incubation-applications.json')
 const JOB_DATA_FILE = path.join(DATA_DIR, 'job-applications.json')
 
+export type ApplicationStatus = 'pending' | 'approved' | 'rejected'
+
 export interface AttachmentRecord {
   filename: string
   originalName: string
@@ -25,6 +27,8 @@ export interface ApplicationRecord {
   creditCode: string
   cities: string[]
   receivedAt: string
+  status: ApplicationStatus
+  reviewedAt: string | null
   attachments: AttachmentRecord[]
 }
 
@@ -34,6 +38,8 @@ export interface SkillApplicationRecord {
   applicationNo: string
   direction: SkillDirection
   receivedAt: string
+  status: ApplicationStatus
+  reviewedAt: string | null
   attachments: AttachmentRecord[]
 }
 
@@ -45,6 +51,8 @@ export interface MarketApplicationRecord {
   businessIntro: string
   advantages: string
   receivedAt: string
+  status: ApplicationStatus
+  reviewedAt: string | null
 }
 
 export interface IncubationApplicationRecord {
@@ -52,6 +60,8 @@ export interface IncubationApplicationRecord {
   projectIntro: string
   incubationNeeds: string
   receivedAt: string
+  status: ApplicationStatus
+  reviewedAt: string | null
 }
 
 export interface JobApplicationRecord {
@@ -62,6 +72,8 @@ export interface JobApplicationRecord {
   city: string
   expectedSalary: string
   receivedAt: string
+  status: ApplicationStatus
+  reviewedAt: string | null
 }
 
 function ensureDataFile(filePath: string): void {

@@ -2,18 +2,15 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
-import { fileURLToPath } from 'url'
-import { appendApplication, generateApplicationNo } from '../lib/storage.js'
+import { appendApplication, generateApplicationNo, type ApplicationStatus } from '../lib/storage.js'
+import { uploadConfig, reviewConfig, notifyConfig } from '../lib/config.js'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const UPLOAD_DIR = path.resolve(__dirname, '../../uploads')
+const UPLOAD_DIR = uploadConfig.dir
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
 
-const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png']
-const MAX_SIZE = 10 * 1024 * 1024
-const MAX_FILES = 10
+const ALLOWED_MIME = uploadConfig.allowedMime
+const MAX_SIZE = uploadConfig.maxSize
+const MAX_FILES = uploadConfig.maxFiles
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
@@ -116,12 +113,16 @@ router.post('/', uploadAttachments, (req: Request, res: Response): void => {
     return
   }
 
+  const now = new Date().toISOString()
+  const status: ApplicationStatus = reviewConfig.autoApprove ? 'approved' : 'pending'
   const record = {
     applicationNo: generateApplicationNo('CAP'),
     companyName,
     creditCode,
     cities,
-    receivedAt: new Date().toISOString(),
+    receivedAt: now,
+    status,
+    reviewedAt: reviewConfig.autoApprove ? now : null,
     attachments: files.map((f) => ({
       filename: f.filename,
       originalName: f.originalname,
@@ -131,10 +132,16 @@ router.post('/', uploadAttachments, (req: Request, res: Response): void => {
   }
 
   appendApplication(record)
+
+  if (notifyConfig.enabled && notifyConfig.adminEmails.length > 0) {
+    console.log(`[Notify] 新申请 ${record.applicationNo}，通知管理员: ${notifyConfig.adminEmails.join(', ')}`)
+  }
+
   res.status(200).json({
     success: true,
     applicationNo: record.applicationNo,
     receivedAt: record.receivedAt,
+    status,
   })
 })
 

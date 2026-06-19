@@ -23,6 +23,10 @@ const files = ref<File[]>([])
 const uploadError = ref('')
 const uploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
 
+defineExpose({
+  files,
+})
+
 const touched = reactive({
   direction: false,
   files: false,

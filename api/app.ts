@@ -9,7 +9,6 @@ import express, {
 } from 'express'
 import cors from 'cors'
 import path from 'path'
-import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import applyRoutes from './routes/apply.js'
 import skillApplyRoutes from './routes/skill-apply.js'
@@ -17,13 +16,11 @@ import marketApplyRoutes from './routes/market-apply.js'
 import incubationApplyRoutes from './routes/incubation-apply.js'
 import jobApplyRoutes from './routes/job-apply.js'
 import citiesRoutes from './routes/cities.js'
+import './lib/config.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-// load env
-dotenv.config()
 
 const app: express.Application = express()
 
