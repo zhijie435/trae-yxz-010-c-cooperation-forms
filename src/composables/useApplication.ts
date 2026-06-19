@@ -1,6 +1,19 @@
-import { ref } from 'vue'
-import type { ApplySuccess, FieldError } from '@/lib/types'
-import { validateCreditCode, validateFile } from '@/lib/validation'
+import { ref, reactive, computed } from 'vue'
+import type {
+  ApplySuccess,
+  FieldError,
+  ApplicationFormData,
+  ApplicationFormTouched,
+} from '@/lib/types'
+import {
+  validateCompanyName,
+  validateCreditCode,
+  validateCities,
+  validateFiles,
+  validateForm,
+  isFormValid,
+  normalizeCreditCode,
+} from '@/lib/validation'
 
 interface ApplyApiPayload {
   success: boolean
@@ -9,38 +22,97 @@ interface ApplyApiPayload {
   errors?: FieldError[]
 }
 
+const createInitialFormData = (): ApplicationFormData => ({
+  companyName: '',
+  creditCode: '',
+  cities: [],
+  files: [],
+})
+
+const createInitialTouched = (): ApplicationFormTouched => ({
+  companyName: false,
+  creditCode: false,
+  cities: false,
+  files: false,
+})
+
 export function useApplication() {
   const submitting = ref(false)
   const serverErrors = ref<FieldError[]>([])
+  const uploadError = ref('')
 
-  async function submit(payload: {
-    companyName: string
-    creditCode: string
-    cities: string[]
-    files: File[]
-  }): Promise<ApplySuccess | null> {
+  const formData = reactive<ApplicationFormData>(createInitialFormData())
+  const touched = reactive<ApplicationFormTouched>(createInitialTouched())
+
+  const companyNameError = computed(() =>
+    touched.companyName ? validateCompanyName(formData.companyName) ?? '' : '',
+  )
+  const creditCodeError = computed(() =>
+    touched.creditCode ? validateCreditCode(formData.creditCode) ?? '' : '',
+  )
+  const citiesError = computed(() =>
+    touched.cities ? validateCities(formData.cities) ?? '' : '',
+  )
+  const filesError = computed(() => {
+    if (uploadError.value) return uploadError.value
+    return touched.files ? validateFiles(formData.files) ?? '' : ''
+  })
+
+  const canSubmit = computed(() => isFormValid(formData) && !submitting.value)
+  const hasServerError = computed(() => serverErrors.value.length > 0)
+
+  function setFieldTouched(field: keyof ApplicationFormTouched): void {
+    touched[field] = true
+  }
+
+  function markAllTouched(): void {
+    touched.companyName = true
+    touched.creditCode = true
+    touched.cities = true
+    touched.files = true
+  }
+
+  function setCompanyName(value: string): void {
+    formData.companyName = value
+  }
+
+  function setCreditCode(value: string): void {
+    formData.creditCode = normalizeCreditCode(value)
+  }
+
+  function setCities(value: string[]): void {
+    formData.cities = value
+  }
+
+  function setFiles(value: File[]): void {
+    formData.files = value
+    uploadError.value = ''
+  }
+
+  function setUploadError(message: string): void {
+    uploadError.value = message
+    touched.files = true
+  }
+
+  function clearUploadError(): void {
+    uploadError.value = ''
+  }
+
+  function resetForm(): void {
+    Object.assign(formData, createInitialFormData())
+    Object.assign(touched, createInitialTouched())
+    serverErrors.value = []
+    uploadError.value = ''
+  }
+
+  async function submit(): Promise<ApplySuccess | null> {
     submitting.value = true
     serverErrors.value = []
+    uploadError.value = ''
 
-    const clientErrors: FieldError[] = []
-    const companyName = payload.companyName.trim()
-    if (!companyName) clientErrors.push({ field: 'companyName', message: '请填写企业全称' })
-    const creditCodeErr = validateCreditCode(payload.creditCode)
-    if (creditCodeErr) clientErrors.push({ field: 'creditCode', message: creditCodeErr })
-    if (!Array.isArray(payload.cities) || payload.cities.length === 0)
-      clientErrors.push({ field: 'cities', message: '请至少选择一个覆盖城市' })
-    if (!Array.isArray(payload.files) || payload.files.length === 0) {
-      clientErrors.push({ field: 'attachments', message: '请至少上传一个资质附件' })
-    } else {
-      for (const f of payload.files) {
-        const fileErr = validateFile(f)
-        if (fileErr) {
-          clientErrors.push({ field: 'attachments', message: fileErr })
-          break
-        }
-      }
-    }
+    markAllTouched()
 
+    const clientErrors = validateForm(formData)
     if (clientErrors.length > 0) {
       serverErrors.value = clientErrors
       submitting.value = false
@@ -48,10 +120,11 @@ export function useApplication() {
     }
 
     const fd = new FormData()
-    fd.append('companyName', companyName)
-    fd.append('creditCode', payload.creditCode.trim())
-    fd.append('cities', JSON.stringify(payload.cities))
-    for (const f of payload.files) fd.append('attachments', f, f.name)
+    fd.append('companyName', formData.companyName.trim())
+    fd.append('creditCode', formData.creditCode.trim())
+    fd.append('cities', JSON.stringify(formData.cities))
+    for (const f of formData.files) fd.append('attachments', f, f.name)
+
     try {
       const res = await fetch('/api/apply', { method: 'POST', body: fd })
       const data = (await res.json()) as ApplyApiPayload
@@ -78,5 +151,28 @@ export function useApplication() {
     }
   }
 
-  return { submitting, serverErrors, submit, fetchCities }
+  return {
+    formData,
+    touched,
+    submitting,
+    serverErrors,
+    uploadError,
+    companyNameError,
+    creditCodeError,
+    citiesError,
+    filesError,
+    canSubmit,
+    hasServerError,
+    setFieldTouched,
+    markAllTouched,
+    setCompanyName,
+    setCreditCode,
+    setCities,
+    setFiles,
+    setUploadError,
+    clearUploadError,
+    resetForm,
+    submit,
+    fetchCities,
+  }
 }

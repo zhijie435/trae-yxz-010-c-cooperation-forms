@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import CitySelector from './CitySelector.vue'
 import FileUploader from './FileUploader.vue'
 import { useApplication } from '@/composables/useApplication'
-import { validateCreditCode, fieldError } from '@/lib/validation'
+import { fieldError } from '@/lib/validation'
 import type { ApplySuccess } from '@/lib/types'
 import {
   Building2,
   Hash,
-  Paperclip,
   ArrowRight,
   AlertCircle,
   Loader2,
@@ -17,47 +16,27 @@ import {
 
 const emit = defineEmits<{ (e: 'success', payload: ApplySuccess): void }>()
 
-const { submitting, serverErrors, submit, fetchCities } = useApplication()
+const {
+  formData,
+  submitting,
+  serverErrors,
+  companyNameError,
+  creditCodeError,
+  citiesError,
+  filesError,
+  canSubmit,
+  hasServerError,
+  setFieldTouched,
+  setCreditCode,
+  setUploadError,
+  clearUploadError,
+  resetForm,
+  submit,
+  fetchCities,
+} = useApplication()
 
-const companyName = ref('')
-const creditCode = ref('')
-const cities = ref<string[]>([])
-const files = ref<File[]>([])
 const cityOptions = ref<string[]>([])
-const uploadError = ref('')
 const uploaderRef = ref<InstanceType<typeof FileUploader> | null>(null)
-
-const touched = reactive({
-  companyName: false,
-  creditCode: false,
-  cities: false,
-  files: false,
-})
-
-const companyNameError = computed(() =>
-  touched.companyName && !companyName.value.trim() ? '请填写企业全称' : '',
-)
-const creditCodeError = computed(() =>
-  touched.creditCode ? validateCreditCode(creditCode.value) ?? '' : '',
-)
-const citiesError = computed(() =>
-  touched.cities && cities.value.length === 0 ? '请至少选择一个覆盖城市' : '',
-)
-const filesError = computed(() => {
-  if (uploadError.value) return uploadError.value
-  return touched.files && files.value.length === 0 ? '请至少上传一个资质附件' : ''
-})
-
-const canSubmit = computed(
-  () =>
-    !!companyName.value.trim() &&
-    validateCreditCode(creditCode.value) === null &&
-    cities.value.length > 0 &&
-    files.value.length > 0 &&
-    !submitting.value,
-)
-
-const hasServerError = computed(() => serverErrors.value.length > 0)
 
 onMounted(async () => {
   cityOptions.value = await fetchCities()
@@ -65,42 +44,23 @@ onMounted(async () => {
 
 function onCreditInput(e: Event): void {
   const v = (e.target as HTMLInputElement).value
-  creditCode.value = v.toUpperCase().replace(/[^0-9A-Z]/g, '')
+  setCreditCode(v)
 }
 
-function onUploadError(msg: string): void {
-  uploadError.value = msg
-  touched.files = true
+function onUploadChange(): void {
+  setFieldTouched('files')
+  clearUploadError()
 }
 
 async function onSubmit(): Promise<void> {
-  touched.companyName = true
-  touched.creditCode = true
-  touched.cities = true
-  touched.files = true
   serverErrors.value = []
-  if (!canSubmit.value) return
-  const res = await submit({
-    companyName: companyName.value.trim(),
-    creditCode: creditCode.value.trim(),
-    cities: cities.value,
-    files: files.value,
-  })
+  const res = await submit()
   if (res) emit('success', res)
 }
 
-function resetAll(): void {
-  companyName.value = ''
-  creditCode.value = ''
-  cities.value = []
-  files.value = []
-  uploadError.value = ''
+function onReset(): void {
   uploaderRef.value?.clearError()
-  touched.companyName = false
-  touched.creditCode = false
-  touched.cities = false
-  touched.files = false
-  serverErrors.value = []
+  resetForm()
 }
 </script>
 
@@ -137,7 +97,7 @@ function resetAll(): void {
           </label>
           <input
             id="companyName"
-            v-model="companyName"
+            v-model="formData.companyName"
             type="text"
             placeholder="请填写营业执照上的企业全称"
             class="field-input"
@@ -146,7 +106,7 @@ function resetAll(): void {
                 ? 'border-danger focus:border-danger'
                 : ''
             "
-            @blur="touched.companyName = true"
+            @blur="setFieldTouched('companyName')"
           />
           <p
             class="mt-1.5 text-[11px]"
@@ -167,7 +127,7 @@ function resetAll(): void {
           </label>
           <input
             id="creditCode"
-            :value="creditCode"
+            :value="formData.creditCode"
             type="text"
             maxlength="18"
             placeholder="18 位大写字母与数字"
@@ -178,7 +138,7 @@ function resetAll(): void {
                 : ''
             "
             @input="onCreditInput"
-            @blur="touched.creditCode = true"
+            @blur="setFieldTouched('creditCode')"
           />
           <p
             class="mt-1.5 text-[11px]"
@@ -200,15 +160,15 @@ function resetAll(): void {
         <span class="text-[11px] text-muted">02</span>
       </div>
       <p class="mb-3 text-[12px] text-muted">选择您的企业可提供服务的城市（可多选）</p>
-      <CitySelector v-model="cities" :cities="cityOptions" @focus="touched.cities = true" />
+      <CitySelector v-model="formData.cities" :cities="cityOptions" @focus="setFieldTouched('cities')" />
       <p
         v-if="citiesError || fieldError(serverErrors, 'cities')"
         class="mt-2 text-[11px] text-danger"
       >
         {{ citiesError || fieldError(serverErrors, 'cities') }}
       </p>
-      <p v-else-if="cities.length" class="mt-2 text-[11px] text-muted">
-        已选择 {{ cities.length }} 个城市
+      <p v-else-if="formData.cities.length" class="mt-2 text-[11px] text-muted">
+        已选择 {{ formData.cities.length }} 个城市
       </p>
     </section>
 
@@ -218,7 +178,7 @@ function resetAll(): void {
         <span class="text-[11px] text-muted">03</span>
       </div>
       <p class="mb-3 text-[12px] text-muted">上传营业执照、相关资质证书等材料</p>
-      <FileUploader ref="uploaderRef" v-model="files" @change="touched.files = true; uploadError = ''" @error="onUploadError" />
+      <FileUploader ref="uploaderRef" v-model="formData.files" @change="onUploadChange" @error="setUploadError" />
       <p
         v-if="filesError || fieldError(serverErrors, 'attachments')"
         class="mt-2 text-[11px] text-danger"
@@ -231,7 +191,7 @@ function resetAll(): void {
       <button
         type="button"
         class="inline-flex items-center gap-1.5 text-[13px] text-muted transition-colors hover:text-ink"
-        @click="resetAll"
+        @click="onReset"
       >
         <RotateCcw class="h-3.5 w-3.5" />
         重置表单
